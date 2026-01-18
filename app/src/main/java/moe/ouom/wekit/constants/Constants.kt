@@ -1,15 +1,22 @@
-package moe.ouom.wekit.constants;
+package moe.ouom.wekit.constants
 
-public class Constants {
-
-    private Constants() {
-        throw new AssertionError("No instance for you!");
+class Constants private constructor() {
+    init {
+        throw AssertionError("No instance for you!")
     }
-    public static final String WECHAT_LAUNCHER_UI = "com.tencent.mm.ui.LauncherUI";
-    public static final String CLAZZ_BASE_APPLICATION = "com.tencent.mm.app.Application";
-    public static final String PrekXXX = "setting_switch_value_";
-    public static final String PrekCfgXXX = "setting_cfg_value_";
-    public static final String PrekClickableXXX = "clickable_setting_switch_value_";
 
-    public static final String PrekEnableLog = "setting_switch_value_prek_enable_log";
+    companion object {
+        const val WECHAT_LAUNCHER_UI: String = "com.tencent.mm.ui.LauncherUI"
+        const val CLAZZ_BASE_APPLICATION: String = "com.tencent.mm.app.Application"
+        const val CLAZZ_SETTINGS_UI = "com.tencent.mm.plugin.setting.ui.setting.SettingsUI"
+        const val CLAZZ_ICON_PREFERENCE = "com.tencent.mm.ui.base.preference.IconPreference"
+        const val CLAZZ_I_PREFERENCE_SCREEN = "com.tencent.mm.ui.base.preference.IPreferenceScreen"
+        const val CLAZZ_PREFERENCE = "com.tencent.mm.ui.base.preference.Preference"
+        
+
+        const val PrekXXX: String = "setting_switch_value_"
+        const val PrekCfgXXX: String = "setting_cfg_value_"
+        const val PrekClickableXXX: String = "clickable_setting_switch_value_"
+        const val PrekEnableLog: String = "setting_switch_value_prek_enable_log"
+    }
 }

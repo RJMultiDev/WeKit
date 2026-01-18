@@ -238,7 +238,9 @@ dependencies {
     implementation(libs.material.dialogs.input)
     implementation(libs.preference)
     implementation(libs.fastjson2)
-    implementation(projects.libs.ui.xView)
+
+    // 因为放弃了资源注入，此库不再使用
+//    implementation(projects.libs.ui.xView)
 
     implementation(libs.glide)
     implementation(libs.byte.buddy)

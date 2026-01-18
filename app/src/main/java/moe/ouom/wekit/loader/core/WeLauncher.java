@@ -1,6 +1,7 @@
 package moe.ouom.wekit.loader.core;
 
 import static moe.ouom.wekit.constants.Constants.WECHAT_LAUNCHER_UI;
+import static moe.ouom.wekit.util.common.SyncUtils.postDelayed;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,12 +13,16 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import moe.ouom.wekit.config.CacheConfig;
 import moe.ouom.wekit.constants.PackageConstants;
+import moe.ouom.wekit.dexkit.TargetManager;
 import moe.ouom.wekit.hooks._core.HookItemLoader;
-import moe.ouom.wekit.loader.startup.StartupInfo;
+import moe.ouom.wekit.ui.CommonContextWrapper;
+import moe.ouom.wekit.ui.creator.center.MethodFinderDialog;
 import moe.ouom.wekit.util.Initiator;
 import moe.ouom.wekit.util.common.ModuleRes;
 import moe.ouom.wekit.util.common.SyncUtils;
@@ -41,6 +46,12 @@ public class WeLauncher {
                 CacheConfig.setWechatVersionName(pInfo.versionName);
                 CacheConfig.setWechatVersionCode(pInfo.getLongVersionCode());
 
+                if (!Objects.equals(pInfo.versionName, TargetManager.getLastWeChatVersion())){
+                    TargetManager.setIsNeedFindTarget(true);
+                }
+
+
+                TargetManager.setLastWeChatVersion(pInfo.versionName);
                 Logger.i("WeChat Version cached: " + CacheConfig.getWechatVersionName() + " (" + CacheConfig.getWechatVersionCode() + ")");
             }
         } catch (Throwable e) {
@@ -59,7 +70,22 @@ public class WeLauncher {
                 protected void afterHookedMethod(MethodHookParam param) {
                     Activity activity = (Activity) param.thisObject;
                     CacheConfig.setLauncherUIActivity(activity);
+
                     ModuleRes.init(activity, PackageConstants.PACKAGE_NAME_SELF);
+
+                    postDelayed(0, () -> {
+//                        if (!TargetManager.isNeedFindTarget()){
+//                            return;
+//                        }
+
+                        Context fixContext = CommonContextWrapper.createAppCompatContext(activity);
+                        try {
+                            MethodFinderDialog dialog = new MethodFinderDialog(fixContext, activity, cl, ai);
+                            dialog.show();
+                        } catch (Exception e) {
+                            Logger.e("WeLauncher: Failed to show dialog: " + e);
+                        }
+                    });
                 }
             });
 

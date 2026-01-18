@@ -5,7 +5,6 @@ import static moe.ouom.wekit.constants.Constants.CLAZZ_BASE_APPLICATION;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
-import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.Keep;
@@ -61,7 +60,7 @@ public class UnifiedEntryPoint {
     ) {
         try {
             XposedHelpers.findAndHookMethod(
-                CLAZZ_BASE_APPLICATION,
+                    CLAZZ_BASE_APPLICATION,
                 hostClassLoader,
                 "attachBaseContext",
                 Context.class,
@@ -87,7 +86,7 @@ public class UnifiedEntryPoint {
             );
 
             XposedHelpers.findAndHookMethod(
-                CLAZZ_BASE_APPLICATION,
+                    CLAZZ_BASE_APPLICATION,
                 hostClassLoader,
                 "onCreate",
                 Context.class,
