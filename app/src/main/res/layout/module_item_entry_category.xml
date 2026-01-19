@@ -16,7 +16,7 @@
         android:layout_height="24dp"
         android:layout_marginEnd="16dp"
         android:src="@android:drawable/ic_menu_agenda"
-        android:tint="?android:attr/textColorPrimary"/>
+        android:tint="@color/drawable_bg"/>
 
     <TextView
         android:id="@+id/title"
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:text="分类名称"
-        android:textColor="#DE000000"
+        android:textColor="@color/firstTextColor"
         android:textSize="14sp" />
 
 </LinearLayout>

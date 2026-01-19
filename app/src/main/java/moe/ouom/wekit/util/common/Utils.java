@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -22,10 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import moe.ouom.wekit.util.Initiator;
 import moe.ouom.wekit.util.log.Logger;
 
 public class Utils {
@@ -135,7 +131,7 @@ public class Utils {
         return null;
     }
 
-    public static void jump(Context context,String webUrl) {
+    public static void jumpUrl(Context context, String webUrl) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse(webUrl));
         context.startActivity(intent);

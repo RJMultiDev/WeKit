@@ -47,7 +47,6 @@ public abstract class BaseClickableFunctionHookItem extends BaseHookItem {
         }
     }
 
-    public void onClick(Context context) {
-    }
+    public void onClick(Context context) {}
 
 }

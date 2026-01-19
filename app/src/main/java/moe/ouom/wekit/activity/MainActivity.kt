@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import io.github.libxposed.service.XposedService
@@ -53,7 +52,7 @@ class MainActivity : ComponentActivity() {
 
                 MainScreen(
                     activity = this,
-                    onUrlClick = { url -> Utils.jump(this, url) }
+                    onUrlClick = { url -> Utils.jumpUrl(this, url) }
                 )
             }
         }

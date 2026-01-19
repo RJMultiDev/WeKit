@@ -102,7 +102,7 @@ public abstract class BaseHookItem {
      * 标准hook方法执行前
      */
     protected XC_MethodHook.Unhook hookBefore(Member method, HookAction action) {
-        return XposedBridge.hookMethod(method, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"qq_inside_hook_priority",50)) {
+        return XposedBridge.hookMethod(method, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"wekit_hook_priority",50)) {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 tryExecute(param, action);
@@ -113,7 +113,7 @@ public abstract class BaseHookItem {
     protected XC_MethodHook.Unhook hookBefore(Class<?> clazz, HookAction action, Object... parameterTypesAndCallback) {
         Constructor<?> m = findConstructorExact(clazz, getParameterClasses(clazz.getClassLoader(), parameterTypesAndCallback));
 
-        return XposedBridge.hookMethod(m, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"qq_inside_hook_priority",50)) {
+        return XposedBridge.hookMethod(m, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"wekit_hook_priority",50)) {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 tryExecute(param, action);
@@ -126,7 +126,7 @@ public abstract class BaseHookItem {
      * 标准hook方法执行后
      */
     protected XC_MethodHook.Unhook hookAfter(Member method, HookAction action) {
-        return XposedBridge.hookMethod(method, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"qq_inside_hook_priority",50)) {
+        return XposedBridge.hookMethod(method, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"wekit_hook_priority",50)) {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
                 tryExecute(param, action);
@@ -137,7 +137,7 @@ public abstract class BaseHookItem {
     protected XC_MethodHook.Unhook hookAfter(Class<?> clazz, HookAction action, Object... parameterTypesAndCallback) {
         Constructor<?> m = findConstructorExact(clazz, getParameterClasses(clazz.getClassLoader(), parameterTypesAndCallback));
 
-        return XposedBridge.hookMethod(m, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"qq_inside_hook_priority",50)) {
+        return XposedBridge.hookMethod(m, new XC_MethodHook(ConfigManager.dGetInt(PrekCfgXXX+"wekit_hook_priority",50)) {
             @Override
             protected void afterHookedMethod(MethodHookParam param) {
                 tryExecute(param, action);
