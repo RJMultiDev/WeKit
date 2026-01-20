@@ -19,8 +19,8 @@ class Constants private constructor() {
         const val CLAZZ_SQLITE_DATABASE = "com.tencent.wcdb.database.SQLiteDatabase"
 
         // 红包消息类型
-        const val TYPE_LUCKY_MONEY_B = 436207665
-        const val TYPE_LUCKY_MONEY_C = 469762097
+        const val TYPE_LUCKY_MONEY = 436207665  // 红包
+        const val TYPE_LUCKY_MONEY_EXCLUSIVE = 469762097  // 专属
 
         const val PrekXXX: String = "setting_switch_value_"
         const val PrekCfgXXX: String = "setting_cfg_value_"

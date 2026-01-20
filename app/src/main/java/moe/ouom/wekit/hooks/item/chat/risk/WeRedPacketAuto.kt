@@ -6,8 +6,8 @@ import android.content.Context
 import androidx.core.net.toUri
 import de.robv.android.xposed.XposedHelpers
 import moe.ouom.wekit.config.ConfigManager
-import moe.ouom.wekit.constants.Constants.Companion.TYPE_LUCKY_MONEY_B
-import moe.ouom.wekit.constants.Constants.Companion.TYPE_LUCKY_MONEY_C
+import moe.ouom.wekit.constants.Constants.Companion.TYPE_LUCKY_MONEY
+import moe.ouom.wekit.constants.Constants.Companion.TYPE_LUCKY_MONEY_EXCLUSIVE
 import moe.ouom.wekit.dexkit.TargetManager
 import moe.ouom.wekit.hooks._base.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks._core.annotation.HookItem
@@ -73,7 +73,7 @@ class WeRedPacketAuto : BaseClickableFunctionHookItem(), WeDatabaseApi.DatabaseI
         if (table != "message") return
 
         val type = values.getAsInteger("type") ?: 0
-        if (type == TYPE_LUCKY_MONEY_B || type == TYPE_LUCKY_MONEY_C) {
+        if (type == TYPE_LUCKY_MONEY || type == TYPE_LUCKY_MONEY_EXCLUSIVE) {
             handleRedPacket(values)
         }
     }
