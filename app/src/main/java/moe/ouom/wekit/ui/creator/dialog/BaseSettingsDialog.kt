@@ -7,17 +7,21 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.AnimationUtils
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.appcompat.widget.Toolbar // 这次可以放心引用 AndroidX 了
 import moe.ouom.wekit.util.common.ModuleRes
+import moe.ouom.wekit.util.log.Logger
 import androidx.core.graphics.drawable.toDrawable
 
 abstract class BaseSettingsDialog(
     context: Context,
     private val title: String
 ) : Dialog(context, getThemeId()) {
+
+    private var isDismissing = false
 
     companion object {
         private fun getThemeId(): Int {
@@ -34,6 +38,11 @@ abstract class BaseSettingsDialog(
         window?.apply {
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+
+            val animStyleId = ModuleRes.getId("Animation.WeKit.Dialog", "style")
+            if (animStyleId != 0) {
+                setWindowAnimations(animStyleId)
+            }
         }
 
         // 使用 Dialog 自身的 layoutInflater，它绑定了 CommonContextWrapper
@@ -89,5 +98,60 @@ abstract class BaseSettingsDialog(
         val id = ModuleRes.getId(layoutName, "layout")
         if (id == 0) return null
         return layoutInflater.inflate(id, parent, false)
+    }
+
+    override fun show() {
+        super.show()
+        startEnterAnimation()
+    }
+
+    private fun startEnterAnimation() {
+        val animId = ModuleRes.getId("slide_in_bottom", "anim")
+        if (animId != 0) {
+            try {
+                val anim = AnimationUtils.loadAnimation(ModuleRes.getContext(), animId)
+                contentContainer.startAnimation(anim)
+            } catch (e: Exception) {
+                Logger.e("Enter anim failed", e)
+            }
+        }
+    }
+
+    override fun dismiss() {
+        if (isDismissing) return
+        isDismissing = true
+
+        val animId = ModuleRes.getId("slide_out_bottom", "anim")
+
+        if (animId == 0) {
+            super.dismiss()
+            return
+        }
+
+        try {
+            val anim = AnimationUtils.loadAnimation(ModuleRes.getContext(), animId)
+
+            anim.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                override fun onAnimationStart(a: android.view.animation.Animation?) {}
+                override fun onAnimationRepeat(a: android.view.animation.Animation?) {}
+
+                override fun onAnimationEnd(a: android.view.animation.Animation?) {
+                    contentContainer.post {
+                        try {
+                            super@BaseSettingsDialog.dismiss()
+                        } catch (_: Exception) {
+                            // 忽略关闭时的异常
+                        }
+                    }
+                }
+            })
+
+            contentContainer.startAnimation(anim)
+
+        } catch (e: Exception) {
+            Logger.e("Exit anim failed", e)
+            // 如果动画加载出错，必须强制关闭，否则会卡死在界面上
+            super.dismiss()
+        }
     }
 }

@@ -1,11 +1,11 @@
 package moe.ouom.wekit.ui.creator.dialog
 
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.CompoundButton
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -31,6 +31,8 @@ abstract class BaseRikkaDialog(
     private val title: String
 ) : AppCompatDialog(context, getThemeId()) {
 
+    private var isDismissing = false
+
     companion object {
         private fun getThemeId(): Int {
             val themeId = ModuleRes.getId("Theme.WeKit", "style")
@@ -53,6 +55,11 @@ abstract class BaseRikkaDialog(
         super.onCreate(savedInstanceState)
         window?.apply {
             setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+
+            val animStyleId = ModuleRes.getId("Animation.WeKit.Dialog", "style")
+            if (animStyleId != 0) {
+                setWindowAnimations(animStyleId)
+            }
         }
 
         val layoutId = ModuleRes.getId("module_dialog_frame", "layout")
@@ -366,7 +373,7 @@ abstract class BaseRikkaDialog(
         baseSummary: String,
         summaryFormatter: ((String) -> String)?
     ) {
-        // [FIX] 修复 NPE：必须使用 Activity Context (context) 作为 Wrapper 的基础，不能使用 Module Context
+        // 修复 NPE：必须使用 Activity Context 作为 Wrapper 的基础，不能使用 Module Context
         val wrappedContext = CommonContextWrapper.createAppCompatContext(context)
 
         val density = wrappedContext.resources.displayMetrics.density
@@ -416,12 +423,11 @@ abstract class BaseRikkaDialog(
             .setNegativeButton("取消", null)
             .show() // 创建并显示对话框
 
-        // [FIXED] 修复按钮颜色：Material 3 默认可能是紫色
         // 获取模块定义的 accentColor，如果获取失败则使用默认蓝色
-        val accentColor = ModuleRes.getColor("colorAccent") ?: -16776961
+        val accentColor = ModuleRes.getColor("colorAccent")
 
-        dialog.getButton(DialogInterface.BUTTON_POSITIVE)?.setTextColor(accentColor)
-        dialog.getButton(DialogInterface.BUTTON_NEGATIVE)?.setTextColor(accentColor)
+        dialog.getButton(BUTTON_POSITIVE)?.setTextColor(accentColor)
+        dialog.getButton(BUTTON_NEGATIVE)?.setTextColor(accentColor)
     }
 
     /**
@@ -511,5 +517,60 @@ abstract class BaseRikkaDialog(
 
         // 返回 summary view
         return tvSummary
+    }
+
+    override fun show() {
+        super.show()
+        startEnterAnimation()
+    }
+
+    private fun startEnterAnimation() {
+        val animId = ModuleRes.getId("slide_in_bottom", "anim")
+        if (animId != 0) {
+            try {
+                val anim = AnimationUtils.loadAnimation(ModuleRes.getContext(), animId)
+                contentContainer.startAnimation(anim)
+            } catch (e: Exception) {
+                Logger.e("Enter anim failed", e)
+            }
+        }
+    }
+
+    override fun dismiss() {
+        if (isDismissing) return
+        isDismissing = true
+
+        val animId = ModuleRes.getId("slide_out_bottom", "anim")
+
+        if (animId == 0) {
+            super.dismiss()
+            return
+        }
+
+        try {
+            val anim = AnimationUtils.loadAnimation(ModuleRes.getContext(), animId)
+
+            anim.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                override fun onAnimationStart(a: android.view.animation.Animation?) {}
+                override fun onAnimationRepeat(a: android.view.animation.Animation?) {}
+
+                override fun onAnimationEnd(a: android.view.animation.Animation?) {
+                    contentContainer.post {
+                        try {
+                            super@BaseRikkaDialog.dismiss()
+                        } catch (_: Exception) {
+                            // 忽略关闭时的异常
+                        }
+                    }
+                }
+            })
+
+            contentContainer.startAnimation(anim)
+
+        } catch (e: Exception) {
+            Logger.e("Exit anim failed", e)
+            // 如果动画加载出错，必须强制关闭，否则会卡死在界面上
+            super.dismiss()
+        }
     }
 }

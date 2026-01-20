@@ -27,3 +27,4 @@ local.properties
 /libs/ui/xView/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/
 /.spec-workflow/
 /app/release/
+/.idea/inspectionProfiles/Project_Default.xml

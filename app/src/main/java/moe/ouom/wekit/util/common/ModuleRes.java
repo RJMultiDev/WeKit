@@ -67,7 +67,7 @@ public class ModuleRes {
         if (sResources == null) return 0;
         int id = sResources.getIdentifier(resName, resType, sPackageName);
         if (id == 0) {
-            XposedBridge.log("ModuleRes: 未找到资源 " + resType + "/" + resName);
+            Logger.e("ModuleRes: 未找到资源 " + resType + "/" + resName);
         }
         return id;
     }
