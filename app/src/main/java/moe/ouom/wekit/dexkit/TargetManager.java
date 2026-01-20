@@ -1,8 +1,10 @@
 package moe.ouom.wekit.dexkit;
 
 import static moe.ouom.wekit.config.ConfigManager.cGetBoolean;
+import static moe.ouom.wekit.config.ConfigManager.cGetInt;
 import static moe.ouom.wekit.config.ConfigManager.cGetString;
 import static moe.ouom.wekit.config.ConfigManager.cPutBoolean;
+import static moe.ouom.wekit.config.ConfigManager.cPutInt;
 import static moe.ouom.wekit.config.ConfigManager.cPutString;
 import static moe.ouom.wekit.util.Initiator.loadClass;
 import static moe.ouom.wekit.util.common.Utils.findMethodByName;
@@ -30,6 +32,7 @@ import moe.ouom.wekit.config.ConfigManager;
 import moe.ouom.wekit.util.log.Logger;
 
 public class TargetManager {
+    public static final int TargetManager_VERSION = 2;
 
     // 缓存 Key 定义
     public static final String KEY_METHOD_SET_TITLE = "method_pref_setTitle";
@@ -41,11 +44,14 @@ public class TargetManager {
     private static final String PKG_PREFERENCE = "com.tencent.mm.ui.base.preference";
     private static final String CLS_PREFERENCE = PKG_PREFERENCE + ".Preference";
 
+
     /* =========================================================
      * Config helpers
      * ========================================================= */
     public static boolean isNeedFindTarget() { return cGetBoolean("isNeedFindTarget", true); }
     public static void setIsNeedFindTarget(boolean b) { cPutBoolean("isNeedFindTarget", b); }
+    public static void setTargetManagerVersion(int version) { cPutInt("TargetManager_VERSION", version); }
+    public static int getTargetManagerVersion() { return cGetInt("TargetManager_VERSION", 0); }
     public static String getLastWeChatVersion() { return cGetString("LastWeChatVersion", ""); }
     public static void setLastWeChatVersion(String version) { cPutString("LastWeChatVersion", version); }
 

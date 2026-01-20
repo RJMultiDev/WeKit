@@ -3,9 +3,9 @@ package moe.ouom.wekit.config;
 import android.app.Activity;
 import java.lang.ref.WeakReference;
 
-public class CacheConfig {
+public class RuntimeConfig {
 
-    private CacheConfig() {
+    private RuntimeConfig() {
         throw new AssertionError("No instance for you!");
     }
 
@@ -49,7 +49,7 @@ public class CacheConfig {
     }
 
     public static void setLogin_weixin_username(String login_weixin_username) {
-        CacheConfig.login_weixin_username = login_weixin_username;
+        RuntimeConfig.login_weixin_username = login_weixin_username;
     }
 
     public static String getLast_login_nick_name() {
@@ -57,7 +57,7 @@ public class CacheConfig {
     }
 
     public static void setLast_login_nick_name(String last_login_nick_name) {
-        CacheConfig.last_login_nick_name = last_login_nick_name;
+        RuntimeConfig.last_login_nick_name = last_login_nick_name;
     }
 
     public static String getLogin_user_name() {
@@ -65,7 +65,7 @@ public class CacheConfig {
     }
 
     public static void setLogin_user_name(String login_user_name) {
-        CacheConfig.login_user_name = login_user_name;
+        RuntimeConfig.login_user_name = login_user_name;
     }
 
     public static String getLast_login_uin() {
@@ -73,7 +73,7 @@ public class CacheConfig {
     }
 
     public static void setLast_login_uin(String last_login_uin) {
-        CacheConfig.last_login_uin = last_login_uin;
+        RuntimeConfig.last_login_uin = last_login_uin;
     }
 
     public static String getWechatVersionName() {
@@ -81,7 +81,7 @@ public class CacheConfig {
     }
 
     public static void setWechatVersionName(String wechatVersionName) {
-        CacheConfig.wechatVersionName = wechatVersionName;
+        RuntimeConfig.wechatVersionName = wechatVersionName;
     }
 
     public static long getWechatVersionCode() {
@@ -89,6 +89,6 @@ public class CacheConfig {
     }
 
     public static void setWechatVersionCode(long wechatVersionCode) {
-        CacheConfig.wechatVersionCode = wechatVersionCode;
+        RuntimeConfig.wechatVersionCode = wechatVersionCode;
     }
 }

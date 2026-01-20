@@ -1,6 +1,7 @@
 package moe.ouom.wekit.loader.core;
 
 import static moe.ouom.wekit.constants.Constants.CLAZZ_WECHAT_LAUNCHER_UI;
+import static moe.ouom.wekit.dexkit.TargetManager.getTargetManagerVersion;
 import static moe.ouom.wekit.util.common.SyncUtils.postDelayed;
 
 import android.app.Activity;
@@ -17,7 +18,7 @@ import java.util.Objects;
 
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
-import moe.ouom.wekit.config.CacheConfig;
+import moe.ouom.wekit.config.RuntimeConfig;
 import moe.ouom.wekit.constants.PackageConstants;
 import moe.ouom.wekit.dexkit.TargetManager;
 import moe.ouom.wekit.hooks._core.HookItemLoader;
@@ -39,16 +40,22 @@ public class WeLauncher {
 
             if (pInfo != null) {
                 // 存入 CacheConfig
-                CacheConfig.setWechatVersionName(pInfo.versionName);
-                CacheConfig.setWechatVersionCode(pInfo.getLongVersionCode());
+                RuntimeConfig.setWechatVersionName(pInfo.versionName);
+                RuntimeConfig.setWechatVersionCode(pInfo.getLongVersionCode());
 
                 if (!Objects.equals(pInfo.versionName, TargetManager.getLastWeChatVersion())){
                     TargetManager.setIsNeedFindTarget(true);
                 }
 
+                if (getTargetManagerVersion() != TargetManager.TargetManager_VERSION) {
+                    TargetManager.setIsNeedFindTarget(true);
+                }
+
 
                 TargetManager.setLastWeChatVersion(pInfo.versionName);
-                Logger.i("WeChat Version cached: " + CacheConfig.getWechatVersionName() + " (" + CacheConfig.getWechatVersionCode() + ")");
+                TargetManager.setTargetManagerVersion(TargetManager.TargetManager_VERSION);
+
+                Logger.i("WeChat Version cached: " + RuntimeConfig.getWechatVersionName() + " (" + RuntimeConfig.getWechatVersionCode() + ")");
             }
         } catch (Throwable e) {
             Logger.e("WeLauncher: Failed to load version info: " + e);
@@ -65,7 +72,7 @@ public class WeLauncher {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     Activity activity = (Activity) param.thisObject;
-                    CacheConfig.setLauncherUIActivity(activity);
+                    RuntimeConfig.setLauncherUIActivity(activity);
 
                     ModuleRes.init(activity, PackageConstants.PACKAGE_NAME_SELF);
                 }
@@ -90,10 +97,10 @@ public class WeLauncher {
                     // last_login_nick_name: 帽子叔叔
                     // login_user_name: 150665766147
                     // last_login_uin: 1293948946
-                    CacheConfig.setLogin_weixin_username(login_weixin_username);
-                    CacheConfig.setLast_login_nick_name(last_login_nick_name);
-                    CacheConfig.setLogin_user_name(login_user_name);
-                    CacheConfig.setLast_login_uin(last_login_uin);
+                    RuntimeConfig.setLogin_weixin_username(login_weixin_username);
+                    RuntimeConfig.setLast_login_nick_name(last_login_nick_name);
+                    RuntimeConfig.setLogin_user_name(login_user_name);
+                    RuntimeConfig.setLast_login_uin(last_login_uin);
 //                    Logger.d("login_weixin_username: " + login_weixin_username + "\nlast_login_nick_name: " + last_login_nick_name + "\nlogin_user_name: " + login_user_name + "\nlast_login_uin: " + last_login_uin);
 
                     postDelayed(0, () -> {
@@ -103,7 +110,7 @@ public class WeLauncher {
                         }
 
                         Context fixContext = CommonContextWrapper.createAppCompatContext(activity);
-                        Logger.w("wechat updated, need find new target first!");
+                        Logger.w("wechat/wekit updated, need find new target first!");
                         try {
                             MethodFinderDialog dialog = new MethodFinderDialog(fixContext, activity, cl, ai);
                             dialog.show();
