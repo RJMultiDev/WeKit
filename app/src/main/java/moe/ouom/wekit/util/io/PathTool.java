@@ -6,7 +6,6 @@ import android.os.Environment;
 import java.io.File;
 
 import moe.ouom.wekit.host.impl.HostInfo;
-import moe.ouom.wekit.util.log.Logger;
 
 
 public class PathTool {
@@ -25,14 +24,16 @@ public class PathTool {
         String directory = getStorageDirectory() + "/Android/data/" + HostInfo.getHostInfo().getPackageName() + "/WeKit";
         File file = new File(directory);
         if (!file.exists()) {
-            Logger.d("file.mkdirs(): " + file.mkdirs());
+            file.mkdirs();
         }
         return directory;
     }
 
     public static String getModuleCachePath(String dirName) {
         File cache = new File(getModuleDataPath() + "/cache/" + dirName);
-        if (!cache.exists()) Logger.d("cache.mkdirs(): " + cache.mkdirs());
+        if (!cache.exists()) {
+            cache.mkdirs();
+        }
         return cache.getAbsolutePath();
     }
 
