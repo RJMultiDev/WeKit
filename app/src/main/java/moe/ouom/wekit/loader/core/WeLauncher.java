@@ -22,6 +22,7 @@ import moe.ouom.wekit.config.RuntimeConfig;
 import moe.ouom.wekit.constants.PackageConstants;
 import moe.ouom.wekit.dexkit.TargetManager;
 import moe.ouom.wekit.hooks._core.HookItemLoader;
+import moe.ouom.wekit.security.SignatureVerifier;
 import moe.ouom.wekit.ui.CommonContextWrapper;
 import moe.ouom.wekit.ui.creator.center.MethodFinderDialog;
 import moe.ouom.wekit.util.Initiator;
@@ -127,6 +128,11 @@ public class WeLauncher {
         }
 
         /////  -----------------------   /////
+
+        if (!SignatureVerifier.isSignatureValid()) {
+            Logger.e("WeLauncher", "签名校验失败，跳过 Hook 加载");
+            return;
+        }
 
         HookItemLoader hookItemLoader = new HookItemLoader();
         hookItemLoader.loadHookItem(SyncUtils.getProcessType());

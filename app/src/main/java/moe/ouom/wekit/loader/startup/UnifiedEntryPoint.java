@@ -60,16 +60,27 @@ public class UnifiedEntryPoint {
     ) {
         try {
             XposedHelpers.findAndHookMethod(
-                    CLAZZ_BASE_APPLICATION,
+                CLAZZ_BASE_APPLICATION,
                 hostClassLoader,
                 "attachBaseContext",
                 Context.class,
                 new XC_MethodHook() {
                     @Override
-                    protected void afterHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable {
+                    protected void afterHookedMethod(XC_MethodHook.MethodHookParam param) {
                         Context context = (Context) param.thisObject;
 
                         Logger.i("UnifiedEntryPoint", "Application attached, invoking StartupAgent...");
+
+                        try {
+                            Class<?> kStartupAgent = Class.forName("moe.ouom.wekit.loader.startup.StartupAgent", false, UnifiedEntryPoint.class.getClassLoader());
+                            kStartupAgent.getMethod("startup", String.class, String.class, ILoaderService.class, ClassLoader.class, IHookBridge.class)
+                                    .invoke(null, modulePath, hostDataDir, loaderService, hostClassLoader, hookBridge);
+
+                        } catch (ReflectiveOperationException e) {
+                            Throwable cause = getInvocationTargetExceptionCause(e);
+                            Log.e(BuildConfig.TAG,"StartupAgent.startup: failed inside hook", cause);
+                            throw unsafeThrow(cause);
+                        }
 
                         try {
                             Class<?> kStartupAgent = Class.forName("moe.ouom.wekit.loader.startup.StartupAgent", false, UnifiedEntryPoint.class.getClassLoader());
@@ -85,17 +96,18 @@ public class UnifiedEntryPoint {
                 }
             );
 
+
             XposedHelpers.findAndHookMethod(
-                    CLAZZ_BASE_APPLICATION,
+                CLAZZ_BASE_APPLICATION,
                 hostClassLoader,
                 "onCreate",
                 Context.class,
                 new XC_MethodHook() {
                     @Override
                     protected void afterHookedMethod(XC_MethodHook.MethodHookParam param) throws Throwable {
-                        Logger.i("UnifiedEntryPoint", "Application onCreate!");
-                        Application hostApp = (Application) param.thisObject;
-                        StartupInfo.setHostApp(hostApp);
+                    Logger.i("UnifiedEntryPoint", "Application onCreate!");
+                    Application hostApp = (Application) param.thisObject;
+                    StartupInfo.setHostApp(hostApp);
                     }
                 }
             );
@@ -129,6 +141,7 @@ public class UnifiedEntryPoint {
         }
         return e;
     }
+
 
     @SuppressWarnings("unchecked")
     @NonNull

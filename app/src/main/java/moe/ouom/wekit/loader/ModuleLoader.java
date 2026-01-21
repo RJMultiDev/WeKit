@@ -12,15 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import dalvik.system.BaseDexClassLoader;
-import moe.ouom.wekit.BuildConfig;
 import moe.ouom.wekit.loader.hookapi.IHookBridge;
 import moe.ouom.wekit.loader.hookapi.ILoaderService;
 import moe.ouom.wekit.util.log.Logger;
 
 public class ModuleLoader {
 
-    private ModuleLoader() {
-    }
+    private ModuleLoader() {}
 
     private static boolean sLoaded = false;
     private static final ArrayList<Throwable> sInitErrors = new ArrayList<>(1);

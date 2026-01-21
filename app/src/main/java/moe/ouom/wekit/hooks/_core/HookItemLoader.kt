@@ -7,6 +7,7 @@ import moe.ouom.wekit.hooks._base.ApiHookItem
 import moe.ouom.wekit.hooks._base.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks._base.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks._core.factory.HookItemFactory
+import moe.ouom.wekit.security.SignatureVerifier
 import moe.ouom.wekit.util.log.Logger
 
 
@@ -15,6 +16,11 @@ class HookItemLoader {
      * 加载并判断哪些需要加载
      */
     fun loadHookItem(process: Int) {
+        if (!SignatureVerifier.isSignatureValid()) {
+            Logger.e("[HookItemLoader]", "签名校验失败，所有 Hook 功能已被禁用")
+            return
+        }
+
         val allHookItems = HookItemFactory.getAllItemList()
         allHookItems.forEach { hookItem ->
             val path = hookItem.path

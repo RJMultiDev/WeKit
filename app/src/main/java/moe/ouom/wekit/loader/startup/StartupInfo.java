@@ -1,7 +1,5 @@
 package moe.ouom.wekit.loader.startup;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Application;
 
 import androidx.annotation.NonNull;

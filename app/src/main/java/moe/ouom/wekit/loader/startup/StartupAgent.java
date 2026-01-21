@@ -18,6 +18,7 @@ import moe.ouom.wekit.BuildConfig;
 import moe.ouom.wekit.constants.Constants;
 import moe.ouom.wekit.loader.hookapi.IHookBridge;
 import moe.ouom.wekit.loader.hookapi.ILoaderService;
+import moe.ouom.wekit.security.SignatureVerifier;
 import moe.ouom.wekit.util.io.IoUtils;
 import moe.ouom.wekit.util.log.Logger;
 
@@ -25,6 +26,7 @@ import moe.ouom.wekit.util.log.Logger;
 @Keep
 public class StartupAgent {
 
+    private static final String TAG = "StartupAgent";
     private static boolean sInitialized = false;
 
     private StartupAgent() {
@@ -40,7 +42,7 @@ public class StartupAgent {
             @Nullable IHookBridge hookBridge
     ) {
         if (sInitialized) {
-            throw new IllegalStateException("StartupAgent already initialized");
+            return;
         }
         sInitialized = true;
         if ("true".equals(System.getProperty(StartupAgent.class.getName()))) {
@@ -58,6 +60,12 @@ public class StartupAgent {
         checkWriteXorExecuteForModulePath(modulePath);
         // we want context
         Context ctx = getBaseApplication(hostClassLoader);
+
+        boolean signatureValid = SignatureVerifier.verifySignature(ctx);
+        if (!signatureValid) {
+            Logger.e(TAG, "签名校验失败！模块已被篡改，功能将被禁用");
+        }
+
         StartupHook.getInstance().initializeAfterAppCreate(ctx);
     }
 

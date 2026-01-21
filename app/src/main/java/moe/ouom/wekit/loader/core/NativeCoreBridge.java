@@ -17,6 +17,7 @@ public class NativeCoreBridge {
     static {
         // it will be an UnsatisfiedLinkError if first load..
         System.loadLibrary("dexkit");
+        System.loadLibrary("wekit");
     }
 
 
@@ -32,8 +33,6 @@ public class NativeCoreBridge {
 
         // init mmkv
         initializeMmkvForPrimaryNativeLibrary(context);
-
-        // no native code yet ...
     }
 
     /**
