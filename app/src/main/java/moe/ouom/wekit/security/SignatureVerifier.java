@@ -31,48 +31,48 @@ public class SignatureVerifier {
      * 验证应用签名
      */
     public static boolean verifySignature(@NonNull Context context) {
-        return true;
-//        if (sVerified) {
-//            return sSignatureValid;
-//        }
-//
-//        synchronized (SignatureVerifier.class) {
-//            if (sVerified) {
-//                return sSignatureValid;
-//            }
-//
-//            try {
-//                String modulePackageName = BuildConfig.APPLICATION_ID;
-//
-//                PackageManager pm = context.getPackageManager();
-//                PackageInfo packageInfo;
-//
-//                packageInfo = pm.getPackageInfo(modulePackageName, PackageManager.GET_SIGNING_CERTIFICATES);
-//
-//                if (packageInfo.signingInfo != null) {
-//                    Signature[] signatures = packageInfo.signingInfo.getApkContentsSigners();
-//                    sSignatureValid = verifySignatures(signatures);
-//                } else if (packageInfo.signatures != null) {
-//                    sSignatureValid = verifySignatures(packageInfo.signatures);
-//                }
-//
-//                sVerified = true;
-//
-//                if (!sSignatureValid) {
-//                    Logger.e(TAG, "签名校验失败！模块已被篡改，所有功能将被禁用");
-//                } else {
-//                    Logger.i(TAG, "签名校验通过");
-//                }
-//
-//                return sSignatureValid;
-//
-//            } catch (Exception e) {
-//                Logger.e("签名校验异常", e);
-//                sVerified = true;
-//                sSignatureValid = false;
-//                return false;
-//            }
-//        }
+//        return true;
+        if (sVerified) {
+            return sSignatureValid;
+        }
+
+        synchronized (SignatureVerifier.class) {
+            if (sVerified) {
+                return sSignatureValid;
+            }
+
+            try {
+                String modulePackageName = BuildConfig.APPLICATION_ID;
+
+                PackageManager pm = context.getPackageManager();
+                PackageInfo packageInfo;
+
+                packageInfo = pm.getPackageInfo(modulePackageName, PackageManager.GET_SIGNING_CERTIFICATES);
+
+                if (packageInfo.signingInfo != null) {
+                    Signature[] signatures = packageInfo.signingInfo.getApkContentsSigners();
+                    sSignatureValid = verifySignatures(signatures);
+                } else if (packageInfo.signatures != null) {
+                    sSignatureValid = verifySignatures(packageInfo.signatures);
+                }
+
+                sVerified = true;
+
+                if (!sSignatureValid) {
+                    Logger.e(TAG, "签名校验失败！模块已被篡改，所有功能将被禁用");
+                } else {
+                    Logger.i(TAG, "签名校验通过");
+                }
+
+                return sSignatureValid;
+
+            } catch (Exception e) {
+                Logger.e("签名校验异常", e);
+                sVerified = true;
+                sSignatureValid = false;
+                return false;
+            }
+        }
     }
 
     /**
@@ -127,8 +127,8 @@ public class SignatureVerifier {
      * 检查签名是否有效
      */
     public static boolean isSignatureValid() {
-        return true;
-//        return sVerified && sSignatureValid;
+//        return true;
+        return sVerified && sSignatureValid;
     }
 
     /**
