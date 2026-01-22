@@ -22,11 +22,22 @@ class SimplifiedExample : BaseSwitchFunctionHookItem() /* 这里也可以继承 
     // DSL: 懒加载 Dex 方法（不需要 path、searchVersion、priorityKey）
     private val MethodTarget by lazyDexMethod("MethodTarget")
 
-    // Dex 查找逻辑
-    // 他会自动检测逻辑变化，当寻找逻辑发生改变时，会自动要求宿主适配新的逻辑
+    // ========== Dex 查找与缓存 ==========
+
+    /**
+     * Dex 查找逻辑
+     *
+     * 重要说明：
+     * 1. 必须返回 Map<属性名, descriptor字符串>
+     * 2. 系统会自动检测方法逻辑变化，当查找逻辑改变时会自动要求重新扫描
+     * 3. 所有使用 lazyDexMethod 声明的属性都应该在这里搜索并返回
+     * 4. 使用 findDexClassMethod 会在找不到或找到多个时抛出异常
+     * 5. 使用 findDexClassMethodOptional 可以允许多个结果或空结果
+     */
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
         val descriptors = mutableMapOf<String, String>()
 
+        // 查找目标方法
         MethodTarget.findDexClassMethod(dexKit) {
             matcher {
                 name = "targetMethod"
@@ -34,14 +45,28 @@ class SimplifiedExample : BaseSwitchFunctionHookItem() /* 这里也可以继承 
                 usingStrings("some_string_constant")
             }
         }
-
+        // 将找到的 descriptor 添加到返回的 Map 中
         MethodTarget.getDescriptorString()?.let { descriptors["MethodTarget"] = it }
+
+        // 如果有多个方法需要查找，继续添加：
+        // AnotherMethod.findDexClassMethod(dexKit) { ... }
+        // AnotherMethod.getDescriptorString()?.let { descriptors["AnotherMethod"] = it }
 
         return descriptors
     }
 
+    /**
+     * 从缓存加载 descriptors
+     *
+     * 重要说明：
+     * 1. 这个方法会在缓存有效时被调用，避免重复扫描
+     * 2. 必须恢复所有在 dexFind() 中搜索的方法
+     * 3. 属性名必须与 dexFind() 中使用的 key 一致
+     */
     override fun loadFromCache(cache: Map<String, Any>) {
         (cache["MethodTarget"] as? String)?.let { MethodTarget.setDescriptorFromCache(it) }
+        // 如果有多个方法，继续恢复：
+        // (cache["AnotherMethod"] as? String)?.let { AnotherMethod.setDescriptorFromCache(it) }
     }
 
     // Hook 入口
