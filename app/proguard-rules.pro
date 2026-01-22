@@ -194,6 +194,12 @@
 -dontwarn org.luckypray.dexkit.**
 
 # ==========================================================
+# Material Dialogs
+# ==========================================================
+-keep class com.afollestad.materialdialogs.** { *; }
+-dontwarn com.afollestad.materialdialogs.**
+
+# ==========================================================
 # Build Behavior
 # ==========================================================
 -dontoptimize
