@@ -792,7 +792,6 @@ afterEvaluate {
 
 kotlin {
     sourceSets.configureEach { kotlin.srcDir("$buildDir/generated/ksp/$name/kotlin/") }
-    sourceSets.main { kotlin.srcDir(File(rootDir, "libs/util/ezxhelper/src/main/java")) }
 }
 
 protobuf {

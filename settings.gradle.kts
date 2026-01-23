@@ -63,9 +63,9 @@ includeBuild("build-logic")
 
 include(
     ":app",
-    ":libs:ui:xView",
+//    ":libs:ui:xView",
     ":libs:common:libxposed:api",
     ":libs:common:libxposed:service",
-    ":libs:common:ezxhelper",
+//    ":libs:common:ezxhelper",
     ":libs:common:annotation-scanner",
 )

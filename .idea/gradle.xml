@@ -34,12 +34,9 @@
             <option value="$PROJECT_DIR$/libs" />
             <option value="$PROJECT_DIR$/libs/common" />
             <option value="$PROJECT_DIR$/libs/common/annotation-scanner" />
-            <option value="$PROJECT_DIR$/libs/common/ezxhelper" />
             <option value="$PROJECT_DIR$/libs/common/libxposed" />
             <option value="$PROJECT_DIR$/libs/common/libxposed/api" />
             <option value="$PROJECT_DIR$/libs/common/libxposed/service" />
-            <option value="$PROJECT_DIR$/libs/ui" />
-            <option value="$PROJECT_DIR$/libs/ui/xView" />
           </set>
         </option>
       </GradleProjectSettings>
