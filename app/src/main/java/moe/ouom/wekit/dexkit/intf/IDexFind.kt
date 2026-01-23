@@ -47,7 +47,6 @@ interface IDexFind {
             )
         }
     }
-
     /**
      * 收集所有 dex 委托属性
      */
@@ -57,17 +56,15 @@ interface IDexFind {
 
         // 遍历所有字段
         clazz.declaredFields.forEach { field ->
-            if (field.name.startsWith("dex")) {
-                try {
-                    field.isAccessible = true
-                    val value = field.get(this)
-                    when (value) {
-                        is DexClassDelegate -> result[value.key] = value
-                        is DexMethodDelegate -> result[value.key] = value
-                    }
-                } catch (e: Exception) {
-                    // 忽略无法访问的字段
+            try {
+                field.isAccessible = true
+                val value = field.get(this)
+                when (value) {
+                    is DexClassDelegate -> result[value.key] = value
+                    is DexMethodDelegate -> result[value.key] = value
                 }
+            } catch (_: Exception) {
+                // 忽略无法访问的字段
             }
         }
 
