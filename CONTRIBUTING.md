@@ -9,6 +9,7 @@
 - [项目架构](#项目架构)
 - [文件夹结构规范](#文件夹结构规范)
 - [如何编写新功能](#如何编写新功能)
+- [版本兼容性指南](#版本兼容性指南)
 - [代码规范](#代码规范)
 - [提交规范](#提交规范)
 - [测试指南](#测试指南)
@@ -330,18 +331,415 @@ moe.ouom.wekit/
    ├─ 创建 Hook 类
    ├─ 实现 DEX 查找逻辑
    ├─ 实现 Hook 逻辑
-   └─ 添加配置和 UI
+   ├─ 添加配置和 UI
+   └─ ⚠️ 实现版本兼容性逻辑（使用 MMVersion 和 requireMinWeChatVersion）
 
 4. 测试验证
    ├─ 本地测试
-   ├─ 多版本兼容性测试
-   └─ 性能测试
+   ├─ ⚠️ 多版本兼容性测试（必须测试多个微信版本）
+   ├─ 性能测试
+   └─ ⚠️ 确认不破坏原有功能
 
 5. 提交代码
    ├─ 遵循提交规范
    ├─ 编写文档
    └─ 创建 Pull Request
 ```
+
+---
+
+## 版本兼容性指南
+
+### ⚠️ 核心原则
+
+**在开发任何新功能或修改现有功能时,必须遵循以下原则:**
+
+1. **不破坏原有功能**: 任何更改都不能导致现有功能失效
+2. **不放弃旧版本适配**: 必须保持对旧版本微信的兼容性
+3. **使用版本分支**: 通过 `MMVersion` 和 `requireMinWeChatVersion` 为不同版本提供不同的实现
+
+### MMVersion 使用指南
+
+`MMVersion` 是 WeKit 提供的微信版本常量类,位于 `moe.ouom.wekit.constants.MMVersion`。
+
+#### 可用的版本常量
+
+```kotlin
+object MMVersion {
+    const val MM_8_0_67 = 3000
+    const val MM_8_0_66 = 2980
+    const val MM_8_0_65 = 2960
+    const val MM_8_0_64 = 2940
+    const val MM_8_0_63 = 2920
+    const val MM_8_0_62 = 2900
+    const val MM_8_0_61 = 2880
+    const val MM_8_0_60 = 2860
+    const val MM_8_0_58 = 2840
+    const val MM_8_0_57 = 2820
+    const val MM_8_0_56 = 2780
+    const val MM_8_0_49 = 2600
+    // ... 更多版本常量
+}
+```
+
+#### 获取当前微信版本
+
+```kotlin
+import moe.ouom.wekit.host.HostInfo
+
+// 获取当前微信版本号
+val currentVersion = HostInfo.getVersionCode()
+```
+
+### 版本适配示例
+
+#### 示例 1: 基本版本判断
+
+```kotlin
+import moe.ouom.wekit.constants.MMVersion
+import moe.ouom.wekit.host.HostInfo
+
+override fun entry(classLoader: ClassLoader) {
+    val currentVersion = HostInfo.getVersionCode()
+
+    // 根据版本选择不同的实现
+    when {
+        currentVersion >= MMVersion.MM_8_0_90 -> {
+            // 8.0.90 及以上版本的实现
+            hookForNewVersion(classLoader)
+        }
+        currentVersion >= MMVersion.MM_8_0_70 -> {
+            // 8.0.70 ~ 8.0.89 版本的实现
+            hookForMidVersion(classLoader)
+        }
+        else -> {
+            // 8.0.70 以下版本的实现
+            hookForOldVersion(classLoader)
+        }
+    }
+}
+```
+
+#### 示例 2: 使用 requireMinWeChatVersion 注解
+
+```kotlin
+import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.constants.MMVersion
+
+/**
+ * 此功能仅支持微信 8.0.80 及以上版本
+ */
+@HookItem(
+    path = "聊天与消息/新功能",
+    desc = "需要微信 8.0.80+",
+    requireMinWeChatVersion = MMVersion.MM_8_0_80  // 最低版本要求
+)
+class NewFeature : BaseSwitchFunctionHookItem() {
+    // 实现代码...
+}
+```
+
+#### 示例 3: DEX 查找的版本适配
+
+```kotlin
+override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
+    val descriptors = mutableMapOf<String, String>()
+    val currentVersion = HostInfo.getVersionCode()
+
+    if (currentVersion >= MMVersion.MM_8_0_90) {
+        // 新版本的查找逻辑
+        methodTarget.find(dexKit, descriptors = descriptors) {
+            matcher {
+                usingEqStrings("newVersionString")
+            }
+        }
+    } else {
+        // 旧版本的查找逻辑
+        methodTarget.find(dexKit, descriptors = descriptors) {
+            matcher {
+                usingEqStrings("oldVersionString")
+            }
+        }
+    }
+
+    return descriptors
+}
+```
+
+#### 示例 4: Hook 逻辑的版本适配
+
+```kotlin
+override fun entry(classLoader: ClassLoader) {
+    val currentVersion = HostInfo.getVersionCode()
+
+    methodTarget.toDexMethod {
+        hook {
+            beforeIfEnabled { param ->
+                if (currentVersion >= MMVersion.MM_8_0_90) {
+                    // 新版本的 Hook 逻辑
+                    val newParam = param.args[0] as? String
+                    WeLogger.d("NewVersion", "Processing: $newParam")
+                    // 新版本的处理...
+                } else {
+                    // 旧版本的 Hook 逻辑
+                    val oldParam = param.args[1] as? String
+                    WeLogger.d("OldVersion", "Processing: $oldParam")
+                    // 旧版本的处理...
+                }
+            }
+        }
+    }
+}
+```
+
+#### 示例 5: 完整的版本兼容实现
+
+```kotlin
+package moe.ouom.wekit.hooks.item.chat.msg
+
+import moe.ouom.wekit.constants.MMVersion
+import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.dexkit.intf.IDexFind
+import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.host.HostInfo
+import org.luckypray.dexkit.DexKitBridge
+
+@HookItem(
+    path = "聊天与消息/版本兼容示例",
+    desc = "展示如何进行版本适配"
+)
+class VersionCompatExample : BaseSwitchFunctionHookItem(), IDexFind {
+
+    private val methodTarget by dexMethod()
+
+    override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
+        val descriptors = mutableMapOf<String, String>()
+        val currentVersion = HostInfo.getVersionCode()
+
+        // 根据版本使用不同的查找策略
+        methodTarget.find(dexKit, descriptors = descriptors) {
+            matcher {
+                when {
+                    currentVersion >= MMVersion.MM_8_0_90 -> {
+                        // 8.0.90+ 版本的特征
+                        usingEqStrings("newFeatureString")
+                        paramCount = 3
+                    }
+                    currentVersion >= MMVersion.MM_8_0_70 -> {
+                        // 8.0.70 ~ 8.0.89 版本的特征
+                        usingEqStrings("midFeatureString")
+                        paramCount = 2
+                    }
+                    else -> {
+                        // 8.0.70 以下版本的特征
+                        usingEqStrings("oldFeatureString")
+                        paramCount = 1
+                    }
+                }
+            }
+        }
+
+        return descriptors
+    }
+
+    override fun entry(classLoader: ClassLoader) {
+        val currentVersion = HostInfo.getVersionCode()
+
+        methodTarget.toDexMethod {
+            hook {
+                beforeIfEnabled { param ->
+                    try {
+                        when {
+                            currentVersion >= MMVersion.MM_8_0_90 -> {
+                                handleNewVersion(param)
+                            }
+                            currentVersion >= MMVersion.MM_8_0_70 -> {
+                                handleMidVersion(param)
+                            }
+                            else -> {
+                                handleOldVersion(param)
+                            }
+                        }
+                    } catch (e: Throwable) {
+                        WeLogger.e("VersionCompatExample", "Hook 失败", e)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleNewVersion(param: XC_MethodHook.MethodHookParam) {
+        // 新版本的处理逻辑
+        val arg1 = param.args[0]
+        val arg2 = param.args[1]
+        val arg3 = param.args[2]
+        WeLogger.d("VersionCompatExample", "处理新版本: $arg1, $arg2, $arg3")
+        // ... 具体实现
+    }
+
+    private fun handleMidVersion(param: XC_MethodHook.MethodHookParam) {
+        // 中间版本的处理逻辑
+        val arg1 = param.args[0]
+        val arg2 = param.args[1]
+        WeLogger.d("VersionCompatExample", "处理中间版本: $arg1, $arg2")
+        // ... 具体实现
+    }
+
+    private fun handleOldVersion(param: XC_MethodHook.MethodHookParam) {
+        // 旧版本的处理逻辑
+        val arg1 = param.args[0]
+        WeLogger.d("VersionCompatExample", "处理旧版本: $arg1")
+        // ... 具体实现
+    }
+}
+```
+
+### 版本兼容性最佳实践
+
+#### 1. 优先使用版本分支而非功能禁用
+
+**❌ 不推荐**:
+```kotlin
+// 直接禁用旧版本的功能
+if (currentVersion < MMVersion.MM_8_0_90) {
+    WeLogger.w("此功能不支持旧版本")
+    return
+}
+```
+
+**✅ 推荐**:
+```kotlin
+// 为旧版本提供替代实现
+if (currentVersion >= MMVersion.MM_8_0_90) {
+    hookNewVersionMethod()
+} else {
+    hookOldVersionMethod()  // 提供旧版本的实现
+}
+```
+
+#### 2. 使用 try-catch 保护版本特定代码
+
+```kotlin
+override fun entry(classLoader: ClassLoader) {
+    try {
+        if (currentVersion >= MMVersion.MM_8_0_90) {
+            // 新版本特定的代码
+            hookNewFeature()
+        } else {
+            // 旧版本的代码
+            hookOldFeature()
+        }
+    } catch (e: Throwable) {
+        WeLogger.e("MyHook", "版本适配失败: ${HostInfo.getVersionName()}", e)
+        // 不要让异常影响其他功能
+    }
+}
+```
+
+
+#### 3. 文档化版本要求
+
+在代码注释中明确说明版本要求:
+
+```kotlin
+/**
+ * 消息防撤回功能
+ *
+ * 版本兼容性:
+ * - 8.0.90+: 使用新的消息撤回 API
+ * - 8.0.70 ~ 8.0.89: 使用旧的消息撤回 API
+ * - 8.0.65 ~ 8.0.69: 使用最早的消息撤回 API
+ *
+ * @author Your Name
+ * @since 1.0.0
+ */
+@HookItem(
+    path = "聊天与消息/防撤回",
+    desc = "阻止消息撤回"
+)
+class AntiRevokeMsg : BaseSwitchFunctionHookItem() {
+    // ...
+}
+```
+
+### 常见版本兼容问题
+
+#### 问题 1: 方法签名变化
+
+**问题**: 不同版本的微信,同一个方法的参数数量或类型可能不同
+
+**解决方案**:
+```kotlin
+override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
+    val descriptors = mutableMapOf<String, String>()
+    val currentVersion = HostInfo.getVersionCode()
+
+    methodTarget.find(dexKit, descriptors = descriptors) {
+        matcher {
+            usingEqStrings("commonString")  // 使用共同的特征
+
+            // 根据版本设置不同的参数数量
+            paramCount = if (currentVersion >= MMVersion.MM_8_0_90) 3 else 2
+        }
+    }
+
+    return descriptors
+}
+```
+
+#### 问题 2: 类名或包名变化
+
+**问题**: 微信重构导致类的位置变化
+
+**解决方案**:
+```kotlin
+override fun entry(classLoader: ClassLoader) {
+    val currentVersion = HostInfo.getVersionCode()
+
+    val targetClass = if (currentVersion >= MMVersion.MM_8_0_90) {
+        "com.tencent.mm.new.package.ClassName"
+    } else {
+        "com.tencent.mm.old.package.ClassName"
+    }
+
+    XposedHelpers.findAndHookMethod(
+        targetClass,
+        classLoader,
+        "methodName",
+        // ...
+    )
+}
+```
+
+#### 问题 3: 功能完全不存在于旧版本
+
+**解决方案**: 使用 `requireMinWeChatVersion` 限制最低版本
+
+```kotlin
+@HookItem(
+    path = "新功能/仅新版本支持",
+    desc = "此功能仅在 8.0.90+ 可用",
+    requireMinWeChatVersion = MMVersion.MM_8_0_90
+)
+class NewVersionOnlyFeature : BaseSwitchFunctionHookItem() {
+    // 此功能在旧版本上不会显示
+}
+```
+
+### 版本兼容性检查清单
+
+在提交代码前,请确认:
+
+- [ ] 已使用 `MMVersion` 进行版本判断
+- [ ] 已为不同版本提供不同的实现分支
+- [ ] 已在多个微信版本上测试
+- [ ] 已确认不会破坏旧版本的功能
+- [ ] 已添加版本相关的日志输出
+- [ ] 已在代码注释中说明版本兼容性
+- [ ] 已使用 try-catch 保护版本特定代码
+- [ ] 如果功能不支持旧版本,已使用 `requireMinWeChatVersion`
+
+---
 
 ### 标准 Hook 功能编写示例
 
