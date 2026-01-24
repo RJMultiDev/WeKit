@@ -1734,7 +1734,7 @@ public class SyncUtils {
     public static final int PROC_HLDFL = 1 << 25;       // :hldfl
     public static final int PROC_MAGIC_EMOJI = 1 << 26; // :magic_emoji
 
-    public static final int PROC_OTHERS = 1 << 30;      // 其他未知进程（放在最后）
+    public static final int PROC_OTHERS = 1 << 30;      // 未知进程
 }
 ```
 
