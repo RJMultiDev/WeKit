@@ -15,7 +15,7 @@ import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.api.WeDatabaseApi
 import moe.ouom.wekit.hooks.sdk.api.WeNetworkApi
-import moe.ouom.wekit.ui.creator.dialog.item.WeRedPacketConfigDialog
+import moe.ouom.wekit.ui.creator.dialog.item.chat.risk.WeRedPacketConfigDialog
 import moe.ouom.wekit.util.log.WeLogger
 import org.json.JSONObject
 import org.luckypray.dexkit.DexKitBridge
@@ -178,7 +178,6 @@ class WeRedPacketAuto : BaseClickableFunctionHookItem(), WeDatabaseApi.DatabaseI
     }
 
     override fun onClick(context: Context?) {
-        super.onClick(context)
         context?.let { WeRedPacketConfigDialog(it).show() }
     }
 

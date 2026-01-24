@@ -23,7 +23,6 @@ class DexCacheCleaner : BaseClickableFunctionHookItem() {
                 }
                 .show()
         }
-        super.onClick(context)
     }
 
     override fun noSwitchWidget(): Boolean {

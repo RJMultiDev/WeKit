@@ -150,7 +150,7 @@ plugins {
 // 生成方法hash的任务
 tasks.register("generateMethodHashes") {
     group = "wekit"
-    description = "Generate hash values for all IDexFind implementations at compile time"
+    description = "Generate hash values for the content of dexFind method in IDexFind implementations"
 
     val sourceDir = file("src/main/java")
     val outputDir = file("build/generated/source/methodhashes")
@@ -160,55 +160,74 @@ tasks.register("generateMethodHashes") {
     outputs.file(outputFile)
 
     doLast {
-        println("🔍 [MethodHash] Scanning for IDexFind implementations...")
+        println("🔍 [MethodHash] Scanning dexFind implementations in $sensitivePackagePath...")
 
         val hashMap = mutableMapOf<String, String>()
 
-        // 扫描所有Kotlin文件
         sourceDir.walk()
             .filter { it.isFile && it.extension == "kt" }
             .forEach { file ->
                 val content = file.readText()
 
-                // 检查是否实现了 IDexFind 接口
+                // 检查是否实现了 IDexFind
                 if (content.contains("IDexFind")) {
-                    // 提取类名
+                    // 提取包名和类名
+                    val packageRegex = Regex("""package\s+([\w.]+)""")
                     val classNameRegex = Regex("""(?:class|object)\s+(\w+)""")
-                    val match = classNameRegex.find(content)
 
-                    if (match != null) {
-                        val className = match.groupValues[1]
+                    val packageName = packageRegex.find(content)?.groupValues?.get(1)
+                    val className = classNameRegex.find(content)?.groupValues?.get(1) ?: return@forEach
+                    val fullClassName = if (packageName != null) "$packageName.$className" else className
 
-                        // 计算文件内容的MD5 hash
-                        val md = MessageDigest.getInstance("MD5")
-                        val digest = md.digest(content.toByteArray())
-                        val hash = digest.joinToString("") { byte -> "%02x".format(byte) }
+                    // 提取 dexFind 方法体
+                    // 定位 "override fun dexFind"
+                    val dexFindMatch = Regex("""override\s+fun\s+dexFind\s*\(""").find(content)
 
-                        // 获取完整类名
-                        val packageRegex = Regex("""package\s+([\w.]+)""")
-                        val packageMatch = packageRegex.find(content)
-                        val fullClassName = if (packageMatch != null) {
-                            "${packageMatch.groupValues[1]}.$className"
-                        } else {
-                            className
+                    if (dexFindMatch != null) {
+                        val startSearchIndex = dexFindMatch.range.last
+                        val firstBraceIndex = content.indexOf('{', startSearchIndex)
+
+                        if (firstBraceIndex != -1) {
+                            // 使用花括号计数法提取完整的方法体
+                            var braceCount = 0
+                            var lastBraceIndex = -1
+
+                            for (i in firstBraceIndex until content.length) {
+                                if (content[i] == '{') braceCount++
+                                else if (content[i] == '}') braceCount--
+
+                                if (braceCount == 0) {
+                                    lastBraceIndex = i
+                                    break
+                                }
+                            }
+
+                            if (lastBraceIndex != -1) {
+                                // 提取出来的就是 { ... } 之间的内容
+                                val methodBody = content.substring(firstBraceIndex, lastBraceIndex + 1)
+
+                                // 4. 计算方法体的 MD5 Hash
+                                val md = MessageDigest.getInstance("MD5")
+                                val digest = md.digest(methodBody.toByteArray())
+                                val hash = digest.joinToString("") { byte -> "%02x".format(byte) }
+
+                                hashMap[fullClassName] = hash
+                                println("   ✅ $fullClassName (dexFind body) -> $hash")
+                            }
                         }
-
-                        hashMap[fullClassName] = hash
-                        println("   ✅ $fullClassName -> $hash")
                     }
                 }
             }
 
         if (hashMap.isEmpty()) {
-            println("   ⚠️ No IDexFind implementations found")
+            println("   ⚠️ No dexFind methods found to hash")
         } else {
-            println("   📊 Total: ${hashMap.size} classes")
+            println("   📊 Total: ${hashMap.size} methods hashed")
         }
 
-        // 生成Kotlin文件
+        // 生成 Kotlin 文件
         outputFile.parentFile.mkdirs()
-
-        val mapEntries = hashMap.entries.joinToString(",\n        ") { (className, hash) ->
+        val mapEntries = hashMap.entries.sortedBy { it.key }.joinToString(",\n        ") { (className, hash) ->
             "\"$className\" to \"$hash\""
         }
 
@@ -217,8 +236,9 @@ tasks.register("generateMethodHashes") {
             // Generated at: ${System.currentTimeMillis()}
             // DO NOT EDIT THIS FILE MANUALLY
             package moe.ouom.wekit.dexkit.cache
+
             object GeneratedMethodHashes {
-                val hashes: Map<String, String> = mapOf(
+                private val hashes: Map<String, String> = mapOf(
                     $mapEntries
                 )
                 fun getHash(className: String): String {

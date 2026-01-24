@@ -63,7 +63,6 @@ public abstract class BaseSwitchFunctionHookItem extends BaseHookItem {
     protected final void tryExecute(@NonNull XC_MethodHook.MethodHookParam param, @NonNull HookAction hookAction) {
         if (isEnabled()) {
             super.tryExecute(param, hookAction);
-            WeLogger.i("[BaseSwitchFunctionHookItem] Loading HookItem: " + getPath());
         }
     }
 

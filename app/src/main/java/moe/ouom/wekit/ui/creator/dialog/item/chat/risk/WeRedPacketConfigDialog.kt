@@ -1,4 +1,4 @@
-package moe.ouom.wekit.ui.creator.dialog.item
+package moe.ouom.wekit.ui.creator.dialog.item.chat.risk
 
 import android.content.Context
 import android.text.InputType
