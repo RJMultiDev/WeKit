@@ -656,6 +656,7 @@ INTERNAL_FUNC static int perform_multi_dimensional_verification(JNIEnv* env, con
     std::string apk_path = get_apk_path();
     LOG_SECURE("APK Path: %s", apk_path.c_str());
 
+    // Java 层签名 Hash 校验 (Weight: 20)
     if (verify_checksum_internal(signature_hash)) {
         LOG_SECURE("[V] Java-layer signature verification passed");
         score += 20;
@@ -664,9 +665,11 @@ INTERNAL_FUNC static int perform_multi_dimensional_verification(JNIEnv* env, con
         LOG_SECURE_E("[X] FATAL: Java-layer signature verification failed!");
         g_signature_valid = false;
         onFailed(env);
-        return 0;
+        return 0; // 快速失败
     }
 
+    // Native 层 APK V2 签名块自校验 (Weight: 20)
+    // 防止 Java 层被 Hook 伪造
     if (!apk_path.empty()) {
         if (verify_apk_signature_direct(apk_path)) {
             LOG_SECURE("[V] Native APK signature direct verification passed");
@@ -676,20 +679,16 @@ INTERNAL_FUNC static int perform_multi_dimensional_verification(JNIEnv* env, con
             onFailed(env);
             return 0;
         }
-    }
-
-    if (!apk_path.empty() && verify_apk_signature_direct(apk_path)) {
-        score += 20;
-        g_dex_valid = true;
     } else {
-        LOG_SECURE_E("[X] FATAL: DEX integrity verification failed!");
-        g_dex_valid = false;
+        LOG_SECURE_E("[!] FATAL: Cannot locate APK path for native verification.");
         onFailed(env);
         return 0;
     }
 
+    // DEX 内容完整性强校验 (Weight: 40)
     if (!apk_path.empty() && verify_dex_content_directly(apk_path)) {
-        score += 20;
+        LOG_SECURE("[V] DEX content verification passed");
+        score += 40; // 提升权重以填补移除重复块后的分数空缺
         g_dex_valid = true;
     } else {
         LOG_SECURE_E("[X] FATAL: DEX integrity verification failed!");
@@ -698,6 +697,7 @@ INTERNAL_FUNC static int perform_multi_dimensional_verification(JNIEnv* env, con
         return 0;
     }
 
+    // Native Library (SO) 自身完整性校验 (Weight: 20)
     bool so_check_passed = false;
     if (!apk_path.empty()) {
         int fd = open(apk_path.c_str(), O_RDONLY);
@@ -720,6 +720,7 @@ INTERNAL_FUNC static int perform_multi_dimensional_verification(JNIEnv* env, con
     }
 
     if (so_check_passed) {
+        LOG_SECURE("[V] SO integrity verification passed");
         score += 20;
     } else {
         LOG_SECURE_E("[X] FATAL: SO integrity verification failed!");
@@ -728,6 +729,11 @@ INTERNAL_FUNC static int perform_multi_dimensional_verification(JNIEnv* env, con
     }
 
     LOG_SECURE("=== Verification Passed. Score: %d/100 ===", score);
+
+    if (score != 100) {
+        LOG_SECURE_W("[!] Warning: Verification passed but score is %d (Expected 100)", score);
+    }
+
     return score;
 }
 
