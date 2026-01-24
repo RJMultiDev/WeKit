@@ -45,7 +45,15 @@ public class NativeCoreBridge {
         if (sPrimaryNativeLibraryInitialized) {
             return;
         }
-        File filesDir = ctx.getExternalMediaDirs()[0];
+
+        File filesDir = null;
+
+        File[] externalDirs = ctx.getExternalMediaDirs();
+
+        if (externalDirs != null && externalDirs.length > 0) {
+            filesDir = externalDirs[0];
+        }
+
         if (filesDir == null) {
             filesDir = ctx.getFilesDir();
         }
@@ -54,29 +62,30 @@ public class NativeCoreBridge {
         if (!mmkvDir.exists()) {
             mmkvDir.mkdirs();
         }
+
         // MMKV requires a ".tmp" cache directory, we have to create it manually
         File cacheDir = new File(mmkvDir, ".tmp");
         if (!cacheDir.exists()) {
             cacheDir.mkdir();
         }
+
         File oldDir = new File(ctx.getFilesDir(), "wekit_mmkv");
         if (oldDir.exists() && oldDir.isDirectory()) {
             File[] files = oldDir.listFiles();
-            if (files == null) return;
-
-            for (File src : files) {
-                if (!src.isFile()) continue;
-                File dest = new File(mmkvDir, src.getName());
-                if (!dest.exists()) {
-                    try {
-                        copyFile(src, dest);
-                        WeLogger.i("Copy config file: " + src.getName());
-                    } catch (IOException e) {
-                        WeLogger.e(e);
+            if (files != null) {
+                for (File src : files) {
+                    if (!src.isFile()) continue;
+                    File dest = new File(mmkvDir, src.getName());
+                    if (!dest.exists()) {
+                        try {
+                            copyFile(src, dest);
+                            WeLogger.i("Copy config file: " + src.getName());
+                        } catch (IOException e) {
+                            WeLogger.e(e);
+                        }
                     }
                 }
             }
-
             FileUtils.deleteFile(oldDir);
         }
         MMKV.initialize(ctx, mmkvDir.getAbsolutePath());
