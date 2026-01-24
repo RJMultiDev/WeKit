@@ -4,14 +4,17 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.ApplicationInfo;
 
+import java.lang.ref.WeakReference;
+
 public class RuntimeConfig {
 
     private RuntimeConfig() {
         throw new AssertionError("No instance for you!");
     }
 
+
     @SuppressLint("StaticFieldLeak")
-    private static Activity launcherUIActivity;
+    private static WeakReference<Activity> launcherUIActivityRef;
     private static ClassLoader hostClassLoader;
     private static ApplicationInfo hostApplicationInfo;
 
@@ -37,15 +40,25 @@ public class RuntimeConfig {
     // ------- //
 
     public static void setLauncherUIActivity(Activity activity) {
-        assert activity != null;
-        launcherUIActivity = activity;
+        if (activity == null) {
+            launcherUIActivityRef = null;
+        } else {
+            launcherUIActivityRef = new WeakReference<>(activity);
+        }
     }
 
     public static Activity getLauncherUIActivity() {
-        if (launcherUIActivity == null) {
+        if (launcherUIActivityRef == null) {
             return null;
         }
-        return launcherUIActivity;
+        Activity activity = launcherUIActivityRef.get();
+
+        if (activity != null && (activity.isFinishing() || activity.isDestroyed())) {
+            launcherUIActivityRef = null;
+            return null;
+        }
+
+        return activity;
     }
 
     public static void setHostClassLoader(ClassLoader classLoader) {
