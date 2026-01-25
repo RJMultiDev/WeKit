@@ -71,6 +71,7 @@ class HookItemLoader {
 
                     val activity = RuntimeConfig.getLauncherUIActivity()
                     if (activity != null) {
+                        Thread.sleep(2000)
                         SyncUtils.post {
                             val dialog = DexFinderDialog(activity, classLoader, appInfo, outdatedItems)
                             dialog.show()
