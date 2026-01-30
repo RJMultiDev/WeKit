@@ -627,7 +627,7 @@ INTERNAL_FUNC static bool verify_so_integrity(int fd, const ZipEndOfCentralDir& 
     return true;
 }
 
-void* fix_thread(void* arg) {
+INTERNAL_FUNC void* fix_thread(void* arg) {
     srand(time(nullptr));
     int delay = 5 + (rand() % 16);
     std::this_thread::sleep_for(std::chrono::seconds(delay));
