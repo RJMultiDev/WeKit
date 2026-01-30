@@ -3,6 +3,11 @@
 
 [![Telegram](https://img.shields.io/static/v1?label=Telegram&message=Channel&color=0088cc)](https://t.me/ouom_pub)  [![CI Builds](https://img.shields.io/static/v1?label=CI&message=BUILDS&color=9400D3)](https://t.me/wekit_ci)
 
+<p>
+  <img src="icon/wekit.png" width="260" alt="wekit logo" />
+</p>
+
+
 **WeChat, Now with Superpowers**
 
 🚧 <strong>Work in progress / 开发中</strong>
