@@ -73,7 +73,7 @@ class HookItemLoader {
                     if (activity != null) {
                         Thread.sleep(2000)
                         SyncUtils.post {
-                            val dialog = DexFinderDialog(activity, classLoader, appInfo, outdatedItems)
+                            val dialog = DexFinderDialog(activity, appInfo, outdatedItems)
                             dialog.show()
                         }
                         return@Thread
@@ -101,7 +101,7 @@ class HookItemLoader {
                         val activity = RuntimeConfig.getLauncherUIActivity()
                         if (activity != null) {
                             SyncUtils.post {
-                                val dialog = DexFinderDialog(activity, classLoader, appInfo, failedItems)
+                                val dialog = DexFinderDialog(activity, appInfo, failedItems)
                                 dialog.show()
                                 return@post
                             }
