@@ -1,10 +1,12 @@
 package moe.ouom.wekit.hooks.sdk.protocol.listener
 
-import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.hooks.sdk.api.WeMessageApi
+import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
 import moe.ouom.wekit.util.FunProtoData
+import moe.ouom.wekit.util.common.SyncUtils
 import moe.ouom.wekit.util.log.WeLogger
 import java.lang.reflect.Modifier
 
@@ -12,89 +14,101 @@ import java.lang.reflect.Modifier
 class WePkgListener : ApiHookItem() {
 
     companion object {
-        private var DEBUG = false
+        private var DEBUG = true
 
     }
     override fun entry(classLoader: ClassLoader) {
-        if (DEBUG) {
-            hookBuilder(classLoader) // debug use only
+        SyncUtils.postDelayed(3000) {
+            if (DEBUG) {
+                hookBuilder() // debug use only
+            }
+            hookDispatch()
         }
-        hookDispatch(classLoader)
     }
 
-    private fun hookBuilder(classLoader: ClassLoader) {
-        val builderClass = "com.tencent.mm.modelbase.l"
+    private fun hookBuilder() {
+        val builderClass = WePkgHelper.INSTANCE?.dexClsConfigBuilder?.clazz
 
         try {
-            XposedHelpers.findAndHookMethod(builderClass, classLoader, "a", object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val builder = param.thisObject
+            if (builderClass == null) {
+                WeLogger.e("WePkgListener-gen", "找不到 Builder 类")
+                return
+            }
+            WeLogger.i("WePkgListener-gen", "start Hook ${builderClass.name}.a() 方法")
+            hookAfter(builderClass, "a") { param ->
+                val builder = param.thisObject
 
-                    val cgiId = try { XposedHelpers.getIntField(builder, "d") } catch (e: Throwable) { 0 }
-                    val funcId = try { XposedHelpers.getIntField(builder, "e") } catch (e: Throwable) { 0 }
-                    val routeId = try { XposedHelpers.getIntField(builder, "f") } catch (e: Throwable) { 0 }
-                    val uri = try { XposedHelpers.getObjectField(builder, "c") as? String ?: "" } catch (e: Throwable) { "" }
-
-                    // 获取 Request 对象的类名
-                    var reqClassName = "Unknown"
-                    try {
-                        val reqObj = XposedHelpers.getObjectField(builder, "a")
-                        if (reqObj != null) {
-                            reqClassName = reqObj.javaClass.name
-                        }
-                    } catch (_: Throwable) { }
-
-                    val configLog = "$cgiId to Triple(\"$reqClassName\", $funcId, $routeId), // $uri"
-                    WeLogger.e("WePkgListener-gen", configLog)
-
-//                    WeLogger.printStackTrace()
+                val cgiId = try {
+                    XposedHelpers.getIntField(builder, "d")
+                } catch (_: Throwable) {
+                    0
                 }
-            })
+                val funcId = try {
+                    XposedHelpers.getIntField(builder, "e")
+                } catch (_: Throwable) {
+                    0
+                }
+                val routeId = try {
+                    XposedHelpers.getIntField(builder, "f")
+                } catch (_: Throwable) {
+                    0
+                }
+                val uri = try {
+                    XposedHelpers.getObjectField(builder, "c") as? String ?: ""
+                } catch (_: Throwable) {
+                    ""
+                }
+
+                // 获取 Request 对象的类名
+                var reqClassName = "Unknown"
+                try {
+                    val reqObj = XposedHelpers.getObjectField(builder, "a")
+                    if (reqObj != null) {
+                        reqClassName = reqObj.javaClass.name
+                    }
+                } catch (_: Throwable) { }
+
+                val configLog = "$cgiId to Triple(\"$reqClassName\", $funcId, $routeId), // $uri"
+                WeLogger.w("WePkgListener-gen", configLog)
+            }
         } catch (e: Throwable) {
             WeLogger.e("WePkgListener-gen", "Builder Hook 失败: ${e.message}")
         }
     }
 
-    private fun hookDispatch(classLoader: ClassLoader) {
-        val netSceneBaseClass = "com.tencent.mm.modelbase.m1"
-        val pbBaseClass = "com.tencent.mm.protobuf.f"
+    private fun hookDispatch() {
+        val netSceneBaseClass = WeMessageApi.INSTANCE?.dexClassNetSceneBase?.clazz
+        val pbBaseClass = WePkgHelper.INSTANCE?.dexClsProtoBase?.clazz
 
-        XposedHelpers.findAndHookMethod(
-            netSceneBaseClass,
-            classLoader,
-            "dispatch",
-            "com.tencent.mm.network.s",
-            "com.tencent.mm.network.v0",
-            "com.tencent.mm.network.l0",
-            object : XC_MethodHook() {
-                override fun beforeHookedMethod(param: MethodHookParam) {
-                    try {
-                        val rrObj = param.args[1] ?: return
-                        val uri = XposedHelpers.callMethod(rrObj, "getUri") as? String ?: "null"
-                        val cgiId = XposedHelpers.callMethod(rrObj, "getType") as? Int ?: 0
+        if (netSceneBaseClass != null && pbBaseClass != null) {
+            WeLogger.i("WePkgListener", "start Hook ${netSceneBaseClass.name}.dispatch")
+            hookBefore(netSceneBaseClass, "dispatch") { param ->
+                try {
+                    val rrObj = param.args[1] ?: return@hookBefore
+                    val uri = XposedHelpers.callMethod(rrObj, "getUri") as? String ?: "null"
+                    val cgiId = XposedHelpers.callMethod(rrObj, "getType") as? Int ?: 0
 
-                        if (isIgnoredCgi(uri, cgiId)) return
+                    if (isIgnoredCgi(uri, cgiId)) return@hookBefore
 
-                        val realReqPb = findPbObjectSafe(rrObj, pbBaseClass, 0, 3)
+                    val realReqPb = findPbObjectSafe(rrObj, pbBaseClass.name, 0, 3)
 
-                        if (realReqPb != null) {
-                            if (DEBUG) WeLogger.i("WePkgListener", ">>> [捕获包体] $uri ($cgiId)")
-                            try {
-                                val pbBytes = XposedHelpers.callMethod(realReqPb, "toByteArray") as? ByteArray
-                                if (pbBytes != null && pbBytes.isNotEmpty()) {
-                                    val data = FunProtoData()
-                                    data.fromBytes(pbBytes)
-                                    if (DEBUG) WeLogger.d("WePkgListener", "JSON: ${data.toJSON()}")
-                                }
-                            } catch (_: Exception) { }
-                            if (DEBUG) WeLogger.printStackTrace()
-                        }
-                    } catch (t: Throwable) {
-                        if (DEBUG) WeLogger.e("WePkgListener", "Dispatch 扫描异常: ${t.message}")
+                    if (realReqPb != null) {
+                        if (DEBUG) WeLogger.i("WePkgListener", ">>> [捕获包体] $uri ($cgiId)")
+                        try {
+                            val pbBytes = XposedHelpers.callMethod(realReqPb, "toByteArray") as? ByteArray
+                            if (pbBytes != null && pbBytes.isNotEmpty()) {
+                                val data = FunProtoData()
+                                data.fromBytes(pbBytes)
+                                if (DEBUG) WeLogger.d("WePkgListener", "JSON: ${data.toJSON()}")
+                            }
+                        } catch (_: Exception) { }
+                        if (DEBUG) WeLogger.printStackTrace()
                     }
+                } catch (t: Throwable) {
+                    if (DEBUG) WeLogger.e("WePkgListener", "Dispatch 扫描异常: ${t.message}")
                 }
             }
-        )
+        }
     }
 
     private fun findPbObjectSafe(instance: Any?, targetClassStr: String, currentDepth: Int, maxDepth: Int): Any? {

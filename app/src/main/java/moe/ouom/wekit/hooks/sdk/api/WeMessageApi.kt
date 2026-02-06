@@ -30,7 +30,7 @@ class WeMessageApi : ApiHookItem(), IDexFind {
     // -------------------------------------------------------------------------------------
     private val dexClassNetSceneSendMsg by dexClass()
     private val dexClassNetSceneQueue by dexClass()
-    private val dexClassNetSceneBase by dexClass()
+    val dexClassNetSceneBase by dexClass()
     private val dexClassNetSceneObserverOwner by dexClass()
     private val dexMethodGetSendMsgObject by dexMethod()
     private val dexMethodPostToQueue by dexMethod()

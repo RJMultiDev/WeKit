@@ -2,6 +2,7 @@ package moe.ouom.wekit.loader.core;
 
 import static moe.ouom.wekit.util.io.FileUtils.copyFile;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import com.tencent.mmkv.MMKV;
@@ -41,6 +42,7 @@ public class NativeCoreBridge {
      * @param ctx Application context
      * @throws LinkageError if failed to load native library
      */
+    @SuppressLint("SdCardPath")
     public static void initializeMmkvForPrimaryNativeLibrary(@NonNull Context ctx) {
         if (sPrimaryNativeLibraryInitialized) {
             return;
@@ -88,7 +90,7 @@ public class NativeCoreBridge {
             }
             FileUtils.deleteFile(oldDir);
         }
-        MMKV.initialize(ctx, mmkvDir.getAbsolutePath());
+        MMKV.initialize(ctx, "/data/data/com.tencent.mm/files/mmkv");
         MMKV.mmkvWithID("global_config", MMKV.MULTI_PROCESS_MODE);
         MMKV.mmkvWithID("global_cache", MMKV.MULTI_PROCESS_MODE);
         sPrimaryNativeLibraryInitialized = true;

@@ -27,10 +27,10 @@ import java.lang.reflect.Proxy
 class WePkgHelper : ApiHookItem(), IDexFind {
 
     // 核心 Protobuf 类 //
-    private val dexClsProtoBase by dexClass()
+    val dexClsProtoBase by dexClass()
     private val dexClsRawReq by dexClass()
     private val dexClsGenericResp by dexClass()
-    private val dexClsConfigBuilder by dexClass()
+    val dexClsConfigBuilder by dexClass()
 
     // 业务特定请求类 //
     private val dexClsNewSendMsgReq by dexClass()

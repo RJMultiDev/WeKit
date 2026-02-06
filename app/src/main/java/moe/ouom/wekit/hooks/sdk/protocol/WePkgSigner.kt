@@ -1,17 +1,13 @@
 package moe.ouom.wekit.hooks.sdk.protocol
 
-import androidx.compose.ui.Modifier
 import de.robv.android.xposed.XposedHelpers
+import moe.ouom.wekit.hooks.sdk.protocol.MsgIdProvider.previewNextId
+import moe.ouom.wekit.hooks.sdk.protocol.WeApi.generateClientMsgId
+import moe.ouom.wekit.hooks.sdk.protocol.WeApi.getSelfWxId
 import moe.ouom.wekit.hooks.sdk.protocol.intf.ISigner
 import moe.ouom.wekit.hooks.sdk.protocol.model.SignResult
-import moe.ouom.wekit.util.ProtoJsonBuilder
-import moe.ouom.wekit.util.WeChatAlgo.getSelfWxId
 import moe.ouom.wekit.util.log.WeLogger
 import org.json.JSONObject
-import java.security.MessageDigest
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  * 消息发送签名器 (CGI 522)
@@ -24,11 +20,7 @@ class NewSendMsgSigner : ISigner {
         fun applySign(item: JSONObject) {
             val ts = System.currentTimeMillis()
             item.put("4", (ts / 1000).toInt())
-            val seed = SimpleDateFormat("ssHHmmMMddyy", Locale.CHINA).format(Date(ts))
-            val md5 = MessageDigest.getInstance("MD5").digest(selfWxid.toByteArray())
-            val hexSelf = md5.joinToString("") { "%02x".format(it) }.take(7)
-            val finalSeed = "$seed$hexSelf${String.format("%04x", ts % 65535)}${((ts % 7) + 100)}"
-            item.put("5", finalSeed.hashCode())
+            item.put("5", generateClientMsgId(selfWxid, ts))
         }
 
         val list = json.optJSONArray("2")
@@ -49,7 +41,7 @@ class AppMsgSigner : ISigner {
         val innerMsg = json.optJSONObject("2") ?: return SignResult(json)
         val toUser = innerMsg.optString("4")
 
-        val nextId = WeApi.previewNextId()
+        val nextId = previewNextId("message")
         val nowMs = System.currentTimeMillis()
 
         val signature = "$toUser${nextId}T$nowMs"
@@ -94,7 +86,7 @@ class SendPatSigner(private val clsProvider: () -> Class<*>?) : ISigner {
             val scene = json.optInt("6")
 
             // wxid_xxxxx_761663_1770315448000
-            val validPair = android.util.Pair(761663L, System.currentTimeMillis())
+            val validPair = android.util.Pair(previewNextId("message"), System.currentTimeMillis())
 
             val nativeScene = XposedHelpers.newInstance(
                 cls,
