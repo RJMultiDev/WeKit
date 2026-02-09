@@ -17,7 +17,7 @@ import moe.ouom.wekit.util.common.Toasts
 import moe.ouom.wekit.util.log.WeLogger
 
 @HookItem(path = "开发者选项/分裂群组", desc = "让群聊一分为二")
-class WeSchemeInvocation : BaseClickableFunctionHookItem() {
+class WeSplitChatroomMaker : BaseClickableFunctionHookItem() {
 
     override fun entry(classLoader: ClassLoader) {}
 
