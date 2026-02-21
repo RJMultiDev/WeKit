@@ -53,11 +53,11 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Build unsigned Release
-        run: ./gradlew assembleRelease --warning-mode all
+      - name: Build unsigned dbg ver
+        run: ./gradlew assembleDebug --warning-mode all
 
-      - name: Upload Release APK
+      - name: Upload dbg APK
         uses: actions/upload-artifact@v4
         with:
           name: wekit-apk
-          path: app/build/outputs/apk/release/**/*.apk
+          path: app/build/outputs/apk/debug/**/*.apk
